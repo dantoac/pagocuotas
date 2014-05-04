@@ -36,7 +36,7 @@ def deuda():
     Esto es lo que ve el alumno
     '''
 
-    alumno = request.vars.alumno
+    alumno = request.get_vars.alumno
     
     alumno_data = db.alumno(alumno) or redirect(URL(f='index'))
 
@@ -68,16 +68,41 @@ def deuda():
 
 
 
-def pagar():
-    deuda = request.vars.deuda
-    alumno = request.vars.alumno
+def pago():
+    deuda = request.get_vars.deuda
+    alumno = request.get_vars.alumno
 
     db.pago.deuda.default = deuda
     db.pago.alumno.default = alumno
+    db.pago.deuda.writable = False
+    db.pago.deuda.readable = False
+    db.pago.alumno.writable = False
+    db.pago.alumno.readable = False
 
     form = SQLFORM(db.pago)
 
-    return {'form': form}
+    form.vars.deuda = deuda
+    form.vars.alumno = alumno
+
+    if form.process().accepted:
+        msg = 'Se han abonado {0} a "{1}"'
+        response.flash = msg.format(form.vars.monto, db.deuda(form.vars.deuda).nombre)
+        #redirect(URL(c='default', f='deuda', vars = {'alumno': form.vars.alumno}))
+
+    elif form.errors:
+        response.flash = form.errors
+
+    
+    pagos = db((db.pago.alumno == alumno)
+               & (db.pago.deuda == deuda)
+           ).select(db.pago.monto,
+                    db.pago.fecha,
+                    db.pago.created_on,
+                    orderby = ~db.pago.fecha
+           )
+
+
+    return {'form': form, 'pagos': pagos}
 
 def user():
     return dict(form=auth())

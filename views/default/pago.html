@@ -1,0 +1,23 @@
+{{extend 'layout.html'}}
+
+{{=form}}
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+	<th>Monto</th>
+	<th>Fecha de Pago</th>
+	<th>Fecha de Ingreso</th>
+      </tr>
+    </thead>
+
+    <tbody>
+{{for p in pagos:}}
+  <tr>
+    <td>{{=p.monto}}</td>
+    <td>{{=p.fecha}}</td>
+    <td>{{=p.created_on}}</td>
+  </tr>
+{{pass}}
+    </tbody>
+  </table>

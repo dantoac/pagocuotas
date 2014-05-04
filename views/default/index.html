@@ -1,0 +1,39 @@
+{{extend 'layout.html'}}
+
+<div class="well well-small text-center">
+  <span class="badge badge-important">Total Deuda: ${{=total_deuda}}</span>
+
+  <span class="badge badge-success">Total Pagado: ${{=total_pagado}}</span>
+
+  <span class="badge badge-info">Por cobrar: ${{=total_deuda - total_pagado}}</span>
+
+</div>
+
+<ul class="thumbnails">
+
+{{for data in alumnos:}}
+
+
+  <li class="span2">
+    <div class="thumbnail">
+      <img src="" alt="">
+      <h4>
+	{{=data.alumno.nombre}} 
+	<small>
+	  {{=data.alumno.apellido_paterno}} {{=data.alumno.apellido_materno}}
+	</small>
+      </h4>
+      <ul>
+	<li>Total Pagado: ${{=data[total_pagado_alumno]}}</li>
+	<li>Deuda: ${{=total_deuda - data[total_pagado_alumno]}}</li>
+      </ul>
+      <a class="btn btn-block btn-success" 
+	 href="{{=URL(f='deuda', vars = {'alumno':data.alumno.id})}}">
+	Detalle
+      </a>
+    </div>
+  </li>
+
+{{pass}}
+
+</ul>

@@ -1,0 +1,30 @@
+{{extend 'layout.html'}}
+
+<ul class="thumbnails">
+
+{{for data in deudas:}}
+
+
+  <li class="span4">
+    <div class="thumbnail">
+      <img src="" alt="">
+      <h4>
+	{{=data.deuda.nombre}} 
+	<small>
+	  {{=data.deuda.cuotas}}× ${{=data.deuda.monto}}
+	</small>
+      </h4>
+      <ul>
+	<li>Pagado: ${{=data[total_pagado_alumno]}}</li>
+	<li>Debe: </li>
+      </ul>
+      <a class="btn btn-large btn-block btn-info" 
+	 href="{{=URL(f='pagar', vars = {'alumno': data.alumno.id,
+	       'deuda': data.deuda.id})}}">
+	Detalle</a>
+    </div>
+  </li>
+
+{{pass}}
+
+</ul>

@@ -36,7 +36,7 @@ def deuda():
     Esto es lo que ve el alumno
     '''
 
-    alumno = request.vars.alumno
+    alumno = request.get_vars.alumno
     
     alumno_data = db.alumno(alumno) or redirect(URL(f='index'))
 
@@ -76,6 +76,14 @@ def pagar():
     db.pago.alumno.default = alumno
 
     form = SQLFORM(db.pago)
+
+    if form.process().accepted:
+        msg = 'Se han abonado {0} a "{1}"'
+        session.flash = msg.format(form.vars.monto, db.deuda(form.vars.deuda).nombre)
+        
+        redirect(URL(c='default', f='deuda', vars = {'alumno': form.vars.alumno}))
+    elif form.errors:
+        response.flash = form.errors
 
     return {'form': form}
 

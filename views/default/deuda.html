@@ -15,7 +15,9 @@
 	</small>
       </h4>
       <ul>
+
 	<li>Pagado: ${{=data[total_pagado_alumno]}} (cuota {{=data[total_pagado_alumno]/data.deuda.monto}} de {{=data.deuda.cuotas}})</li>
+
 	<li>Debe: ${{=data.deuda.total - data[total_pagado_alumno]}}</li>
       </ul>
       <a class="btn btn-large btn-block btn-info" 

@@ -151,9 +151,9 @@ def nuevo():
 
 def admin():
 
-    form = SQLFORM.grid(db[request.args(0) or 'deuda'], 
-                             request.args[1:1],
-                             csv = False,
+    form = SQLFORM.smartgrid(db[request.args(0) or 'deuda'], 
+                             #request.args[1:1],
+                             csv = True,
                              user_signature=False)
 
     return {'form':form}

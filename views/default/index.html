@@ -1,39 +1,91 @@
+
+{{response.subtitle=XML('''
+
+
+  Deuda total: <strong>%(total_deuda)s</strong>
+
+  Recaudado: <strong>%(total_pagado)s</strong>
+
+  Por cobrar: <strong>%(total_cobrar)s</strong>
+
+
+''' % dict(total_deuda = numfmt(total_deuda * db(db.alumno).count()), total_pagado = numfmt(total_pagado),
+total_cobrar = numfmt(total_deuda * db(db.alumno).count() - total_pagado)))}}
+
+
 {{extend 'layout.html'}}
 
-<div class="well well-small text-center">
-  <span class="badge badge-important">Total Deuda: ${{=total_deuda}}</span>
-
-  <span class="badge badge-success">Total Pagado: ${{=total_pagado}}</span>
-
-  <span class="badge badge-info">Por cobrar: ${{=total_deuda - total_pagado}}</span>
-
+<div class="progress progress-striped active">
+  <div class="bar" style="width: {{=porcentaje(total_deuda, total_pagado)}}%;">
+    {{=porcentaje(total_deuda, total_pagado)}}%
+  </div>
 </div>
+
 
 <ul class="thumbnails">
 
-{{for data in alumnos:}}
+  {{for data in alumnos:}}
 
 
-  <li class="span2">
-    <div class="thumbnail">
-      <img src="" alt="">
-      <h4>
-	{{=data.alumno.nombre}} 
-	<small>
-	  {{=data.alumno.apellido_paterno}} {{=data.alumno.apellido_materno}}
-	</small>
-      </h4>
-      <ul>
-	<li>Total Pagado: ${{=data[total_pagado_alumno]}}</li>
-	<li>Deuda: ${{=total_deuda - data[total_pagado_alumno]}}</li>
-      </ul>
-      <a class="btn btn-block btn-success" 
-	 href="{{=URL(f='deuda', vars = {'alumno':data.alumno.id})}}">
-	Detalle
-      </a>
+    <li class="span3">
+      <div class="thumbnail" style="height:160px">
+	<img src="" alt="">
+	<h4>
+	  {{=data.alumno.nombre}} 
+	  <small>
+	    {{=data.alumno.apellido_paterno}} {{=data.alumno.apellido_materno}}
+	    <a data-target="#modal-alumno-{{=data.alumno.id}}" role="button" class="btn btn-mini pull-right" data-toggle="modal">Editar</a>
+	  </small>
+	</h4>
+	
+	
+	<ul>
+	  <li>Pagado: {{=numfmt(data[total_pagado_alumno])}}</li>
+	  <li>Por Pagar: {{=numfmt(total_deuda - data[total_pagado_alumno])}}</li>
+	</ul>
+
+	<a class="btn btn-block btn-success deudas-alumno" 
+	   style="display:none;"
+	   href="{{=URL(f='deuda', vars = {'alumno':data.alumno.id})}}">
+	  Detalle
+	</a>
+
+      </div>
+
+
+    </li>
+
+
+    <!-- Modal -->
+    <div id="modal-alumno-{{=data.alumno.id}}" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-alumnoLabel" aria-hidden="true">
+      
+      {{=LOAD('default', 'nuevo.load', args = ['alumno', data.alumno.id], _class='modal-body', content = 'Cargando datos del alumno...')}}
+      
+
+
     </div>
-  </li>
 
-{{pass}}
+  {{pass}}
 
 </ul>
+
+
+<script>
+
+ $(document).ready(function(){
+   
+   $(".thumbnail").hover(
+     function() {
+       $(this).find(".deudas-alumno").show();
+     },
+     function() {
+       $(this).find(".deudas-alumno").hide();
+     }
+   )
+   
+
+ });
+ 
+ 
+
+</script>

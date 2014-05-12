@@ -1,0 +1,19 @@
+{{extend 'layout.html'}}
+
+<div class="navbar">
+  <div class="navbar-inner">
+    
+    <ul class="nav">
+
+      {{for t in db._tables():}}
+
+       
+      <li class="{{='active' if request.args(0) == t else ''}}"><a href="{{=URL(args=t)}}">{{=t}}</a></li>
+      
+      
+      {{pass}}
+    </ul>
+  </div>
+</div>
+
+{{=form}}

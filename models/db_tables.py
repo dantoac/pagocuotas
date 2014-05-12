@@ -1,12 +1,17 @@
 # coding: utf8
 
 db.define_table('alumno',
-                Field('nombre', 'string', length=10),
-                Field('apellido_paterno', length=10),
-                Field('apellido_materno', length=10),
-                Field('apoderados', 'list:reference auth_user'),
+                Field('nombre', 'string'), #, length=10),
+                Field('apellido_paterno'), #, length=10),
+                Field('apellido_materno'),# , length=10),
                 format = '%(nombre)s %(apellido_paterno)s %(apellido_materno)s'
                 )
+
+
+db.define_table('apoderado',
+                Field('alumno', 'reference alumno'),
+                Field('apoderados', 'reference auth_user'),
+            )
 
 
 db.define_table('deuda',
@@ -33,7 +38,7 @@ db.define_table('pago',
                 Field('infoextra', 'text', 
                       label = 'Información Extra'),
                 auth.signature,
-                format = '%(ano)s-%(mes)s: %(monto)s'
+                format = '%(fecha)s: %(monto)s'
                 )
 
 
@@ -41,3 +46,10 @@ db.define_table('documento_pago',
                 Field('pago', 'reference pago'),
                 Field('adjuntar', 'upload')
                 )
+
+
+def porcentaje(total, porcion):
+
+    porciento = porcion * 100 / total
+
+    return porciento

@@ -17,7 +17,7 @@ def index():
     )
 
     deuda_sum = db.deuda.total.coalesce_zero().sum()
-    total_deuda = db(db.deuda).select(deuda_sum).first()[deuda_sum]
+    total_deuda = db(db.deuda).select(deuda_sum).first()[deuda_sum] 
 
 
     pagado_sum = db.pago.monto.coalesce_zero().sum()
@@ -47,7 +47,7 @@ def deuda():
 
     
 
-    deuda_sum = db.deuda.total.coalesce_zero().sum()
+    #deuda_sum = db.deuda.total.coalesce_zero().sum()
 
     total_pagado_alumno = db.pago.monto.coalesce_zero().sum()
 
@@ -71,6 +71,13 @@ def deuda():
 def pago():
     deuda = request.get_vars.deuda
     alumno = request.get_vars.alumno
+    alumno_data = db.alumno(alumno)
+
+    response.title = db.deuda(request.get_vars.deuda).nombre.capitalize()
+    response.subtitle = '%s %s %s' % (alumno_data.nombre.capitalize(), 
+                                      alumno_data.apellido_paterno.capitalize(),
+                                      alumno_data.apellido_materno.capitalize())
+
 
     db.pago.deuda.default = deuda
     db.pago.alumno.default = alumno
@@ -86,7 +93,7 @@ def pago():
 
     if form.process().accepted:
         msg = 'Se han abonado {0} a "{1}"'
-        response.flash = msg.format(form.vars.monto, db.deuda(form.vars.deuda).nombre)
+        response.flash = msg.format(numfmt(form.vars.monto), db.deuda(form.vars.deuda).nombre)
         #redirect(URL(c='default', f='deuda', vars = {'alumno': form.vars.alumno}))
 
     elif form.errors:
@@ -102,7 +109,16 @@ def pago():
            )
 
 
-    return {'form': form, 'pagos': pagos}
+    deuda_sum = db.deuda.total.coalesce_zero().sum()
+    total_deuda = db(db.deuda.id == deuda).select(deuda_sum).first()[deuda_sum]
+
+    total_pago = sum([p.monto for p in pagos])
+
+    return {'form': form, 
+            'pagos': pagos,
+            'total_pagado': total_pago,
+            'total_deuda': total_deuda
+    }
 
 def user():
     return dict(form=auth())
@@ -115,3 +131,29 @@ def download():
 def call():
     return service()
 
+
+
+def nuevo():
+    objeto = request.args(0)
+    _id = request.args(1)
+                    
+    form = SQLFORM(db[objeto], _id, 
+                   _action = URL('default','nuevo', args=request.args),
+                   showid = False,
+    )
+
+    if form.process().accepted:
+        redirect(URL(c='default', f='index.html'))
+    
+    return {'form': form}
+
+
+
+def admin():
+
+    form = SQLFORM.grid(db[request.args(0) or 'deuda'], 
+                             request.args[1:1],
+                             csv = False,
+                             user_signature=False)
+
+    return {'form':form}

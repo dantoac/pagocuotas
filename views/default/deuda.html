@@ -9,6 +9,8 @@
 {{pass}}
 
 
+<h1>Actividades del Curso</h1>
+
 <ul class="thumbnails">
 
 {{for data in deudas:}}
@@ -17,18 +19,22 @@
   <li class="span4">
     <div class="thumbnail">
       <img src="" alt="">
-      <h4>
-	{{=data.deuda.nombre}} 
+      <h3>
+	{{=data.deuda.nombre.title()}} 
 	<small>
 	  {{=data.deuda.cuotas}} cuota(s) de ${{=data.deuda.monto}}
 	</small>
-      </h4>
+      </h3>
+      
+      <span title="{{=data.deuda.finaliza}}" class="pull-right label">{{=prettydate(data.deuda.finaliza) if data.deuda.finaliza else ''}}</span>
 
       <div class="progress progress-striped active">
 	<div class="bar" style="width: {{=porcentaje(data.deuda.total, data[total_pagado_alumno])}}%;">
 	  {{=porcentaje(data.deuda.total, data[total_pagado_alumno])}}%
 	</div>
+
       </div>
+
 
 
       <ul>
@@ -56,10 +62,10 @@
   
    $(".thumbnail").hover(
      function() {
-       $(this).find(".deuda-abonar").show();
+       $(this).find(".deuda-abonar").slideDown();
      },
      function() {
-       $(this).find(".deuda-abonar").hide();
+       $(this).find(".deuda-abonar").slideUp();
      }
    )
    

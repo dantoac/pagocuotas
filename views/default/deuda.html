@@ -3,7 +3,8 @@
 
 {{if not auth.has_membership('admin'):}}
 
-  <p><a href="{{=URL(f='apoderado')}}" class="btn"><i class="icon icon-arrow-left"></i> Mis hijos</a></p>
+  <p><a href="{{=URL(f='apoderado')}}" class="btn btn-inverse">
+    <i class="icon icon-white icon-arrow-left"></i> Mis hijos</a></p>
   
 {{pass}}
 
@@ -38,8 +39,7 @@
       </ul>
       <a class="btn btn-large btn-block btn-info deuda-abonar"
 	 style = "display:none;"
-	 href="{{=URL(f='pago', vars = {'alumno': data.alumno.id,
-	       'deuda': data.deuda.id})}}">
+	 href="{{=URL(f='pago', vars = {'deuda': data.deuda.id})}}">
 	Pagos realizados</a>
     </div>
   </li>

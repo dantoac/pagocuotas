@@ -5,18 +5,22 @@ from gluon.storage import Storage
 #response.title = 'Registro Pago de Cuotas'
 #response.subtitle = '1º Básico B, Colegio Concepción Chiguayante'
 
-'''
-if not db((db.apoderado.usuario == auth.user.id)
-          & (db.apoderado.alumno == request.get_vars.alumno)).isempty():
-    
-    alumno_data = db.alumno(request.get_vars.alumno)
-    
-    session.alumno = '%s %s %s' % (alumno_data.nombre.capitalize(), 
-                                   alumno_data.apellido_paterno.capitalize(),
-                                   alumno_data.apellido_materno.capitalize())
-else:
-    raise HTTP(404, 'No hay ningún alumno asociado a tu cuenta de usuario.')
-'''
+
+def is_apoderado(user_id, alumno):
+    if not db((db.apoderado.usuario == user_id)
+              & (db.apoderado.alumno == alumno)).isempty():
+        
+        alumno_data = db.alumno(alumno)
+        
+        session.alumno = '%s %s %s' % (alumno_data.nombre.capitalize(), 
+                                       alumno_data.apellido_paterno.capitalize(),
+                                       alumno_data.apellido_materno.capitalize())
+
+        session.alumno_id = alumno_data.id
+
+    else:
+        raise HTTP(404, 'No hay ningún alumno asociado a tu cuenta de usuario.')
+
 
 
 def index():
@@ -61,18 +65,18 @@ def apoderado():
     total_pagado_alumno = db.pago.monto.coalesce_zero().sum()
 
     total_deuda = sum([d.total for d in db(db.deuda).select(db.deuda.total)])
-
+    
     alumnos = db((db.auth_user.id == auth.user.id)
                  & (db.apoderado.usuario == db.auth_user.id)
                  & (db.apoderado.alumno == db.alumno.id)
-                 ).select(
-                     db.alumno.ALL,
-                     db.deuda.ALL,
-                     total_pagado_alumno,
-                     left = db.pago.on((db.pago.alumno == db.alumno.id)
-                                       & (db.pago.deuda == db.deuda.id)),
-                     groupby = db.alumno.id,
-                 )
+    ).select(
+        db.alumno.ALL,
+        db.deuda.ALL,
+        total_pagado_alumno,
+        left = db.pago.on((db.pago.alumno == db.alumno.id)
+                          & (db.pago.deuda == db.deuda.id)),
+        groupby = db.alumno.id,
+    )
 
     response.subtitle = []
     
@@ -88,7 +92,16 @@ def deuda():
     Esto es lo que ve el alumno
     '''
 
-    alumno = request.get_vars.alumno
+    if session.alumno_id and not request.get_vars.alumno:
+        alumno = session.alumno_id
+    elif request.get_vars.alumno != 'None':
+        alumno = request.get_vars.alumno
+    else:
+        alumno = 0
+
+    #alumno = request.get_vars.alumno if request.get_vars.alumno != 'None' else 0
+
+    is_apoderado(auth.user.id, alumno)
 
     response.title += ': Deudas'
 
@@ -112,17 +125,14 @@ def deuda():
             }
 
 
-#@auth.requires_membership('Directiva)
+#@auth.requires_membership(#'Directiva)
 def pago():
     deuda = request.get_vars.deuda
-    alumno = request.get_vars.alumno
-    alumno_data = db.alumno(alumno)
+    alumno = session.alumno_id
 
-    response.title = 'Pagos para %s' % db.deuda(request.get_vars.deuda).nombre.capitalize()
-    response.subtitle = '%s %s %s' % (alumno_data.nombre.capitalize(), 
-                                      alumno_data.apellido_paterno.capitalize(),
-                                      alumno_data.apellido_materno.capitalize())
-
+    if request.get_vars.deuda:
+        response.title = 'Pagos para %s' % db.deuda(request.get_vars.deuda).nombre.capitalize()
+    response.subtitle = session.alumno
 
     db.pago.deuda.default = deuda
     db.pago.alumno.default = alumno
@@ -131,7 +141,6 @@ def pago():
     db.pago.alumno.writable = False
     db.pago.alumno.readable = False
 
-    db.pago.monto.represent = lambda v,r: numfmt(v)
 
     query = (db.pago.alumno == alumno) & (db.pago.deuda == deuda)
 
@@ -143,7 +152,7 @@ def pago():
        )
 
 
-    form = SQLFORM.grid(query, user_signature=False)
+    form = SQLFORM.grid(query, user_signature=True)
 
     '''
     form.vars.deuda = deuda
@@ -211,7 +220,7 @@ def admin():
 
     form = SQLFORM.smartgrid(db[request.args(0) or 'alumno'], 
                              #request.args[1:1],
-                             csv = False,
+                             #csv = False,
                              #linked_tables = 
                             
                              user_signature=False)

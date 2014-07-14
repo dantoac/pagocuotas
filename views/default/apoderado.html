@@ -2,6 +2,8 @@
 
 <ul class="thumbnails">
 
+{{total_pago_sum = total_deuda_sum = 0}}
+
 {{for data in alumnos:}}
 
   <li class="span4">
@@ -29,11 +31,13 @@
       </ul>
       <a class="btn btn-large btn-block btn-info deuda-abonar"
 	 style = "display:none;"
-	 href="{{=URL(f='deuda', vars = {'alumno': data.alumno.id,
-	       'deuda': data.deuda.id})}}">
+	 href="{{=URL(f='deuda', vars = {'alumno': data.alumno.id})}}">
 	Detalle</a>
     </div>
   </li>
+
+
+  {{total_pago_sum += data[total_pagado_alumno]}}
 
 {{pass}}
 

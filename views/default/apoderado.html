@@ -1,12 +1,17 @@
 {{extend 'layout.html'}}
 
+<div class="center">
+  <big id="total-pagado" class=""></big>
+  <big id="total-deuda" class=""></big>
+</div>
+
 <ul class="thumbnails">
 
 {{total_pago_sum = total_deuda_sum = 0}}
 
 {{for data in alumnos:}}
 
-  <li class="span4">
+  <li class="span6">
     <div class="thumbnail">
       <img src="" alt="">
       <h4>
@@ -38,6 +43,7 @@
 
 
   {{total_pago_sum += data[total_pagado_alumno]}}
+  {{total_deuda_sum += total_deuda - data[total_pagado_alumno]}}
 
 {{pass}}
 
@@ -57,7 +63,10 @@
        $(this).find(".deuda-abonar").hide();
      }
    )
-   
+
+
+   $("#total-pagado").text("Total Pagado: {{=numfmt(total_pago_sum)}}");
+   $("#total-deuda").text("Total Deuda: {{=numfmt(total_deuda_sum)}}");
 
   });
   

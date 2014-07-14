@@ -1,11 +1,34 @@
 # -*- coding: utf-8 -*-
 
+from gluon.storage import Storage
+
+#response.title = 'Registro Pago de Cuotas'
+#response.subtitle = '1º Básico B, Colegio Concepción Chiguayante'
+
+'''
+if not db((db.apoderado.usuario == auth.user.id)
+          & (db.apoderado.alumno == request.get_vars.alumno)).isempty():
+    
+    alumno_data = db.alumno(request.get_vars.alumno)
+    
+    session.alumno = '%s %s %s' % (alumno_data.nombre.capitalize(), 
+                                   alumno_data.apellido_paterno.capitalize(),
+                                   alumno_data.apellido_materno.capitalize())
+else:
+    raise HTTP(404, 'No hay ningún alumno asociado a tu cuenta de usuario.')
+'''
+
+
 def index():
     '''
     accesible sólo al tesorero
     '''
 
-    response.title = 'Alumnos'
+
+    if not auth.has_membership('Directiva'):
+        redirect(URL(f='apoderado'))
+
+    response.title += 'Alumnos'
 
     total_pagado_alumno = db.pago.monto.coalesce_zero().sum()
 
@@ -30,22 +53,44 @@ def index():
             'total_pagado_alumno': total_pagado_alumno
     }
 
+@auth.requires_login()
+def apoderado():
 
+    response.title = 'Mis Hijos'
+
+    total_pagado_alumno = db.pago.monto.coalesce_zero().sum()
+
+    total_deuda = sum([d.total for d in db(db.deuda).select(db.deuda.total)])
+
+    alumnos = db((db.auth_user.id == auth.user.id)
+                 & (db.apoderado.usuario == db.auth_user.id)
+                 & (db.apoderado.alumno == db.alumno.id)
+                 ).select(
+                     db.alumno.ALL,
+                     db.deuda.ALL,
+                     total_pagado_alumno,
+                     left = db.pago.on((db.pago.alumno == db.alumno.id)
+                                       & (db.pago.deuda == db.deuda.id)),
+                     groupby = db.alumno.id,
+                 )
+
+    response.subtitle = []
+    
+
+    return {'alumnos': alumnos,
+            'total_pagado_alumno': total_pagado_alumno,
+            'total_deuda': total_deuda}
+
+
+@auth.requires_login()
 def deuda():
     '''
     Esto es lo que ve el alumno
     '''
 
     alumno = request.get_vars.alumno
-    
-    alumno_data = db.alumno(alumno) or redirect(URL(f='index'))
 
-    response.title = 'Deudas'
-    response.subtitle = '%s %s %s' % (alumno_data.nombre.capitalize(), 
-                                      alumno_data.apellido_paterno.capitalize(),
-                                      alumno_data.apellido_materno.capitalize())
-
-    
+    response.title += ': Deudas'
 
     #deuda_sum = db.deuda.total.coalesce_zero().sum()
 
@@ -67,13 +112,13 @@ def deuda():
             }
 
 
-
+#@auth.requires_membership('Directiva)
 def pago():
     deuda = request.get_vars.deuda
     alumno = request.get_vars.alumno
     alumno_data = db.alumno(alumno)
 
-    response.title = db.deuda(request.get_vars.deuda).nombre.capitalize()
+    response.title = 'Pagos para %s' % db.deuda(request.get_vars.deuda).nombre.capitalize()
     response.subtitle = '%s %s %s' % (alumno_data.nombre.capitalize(), 
                                       alumno_data.apellido_paterno.capitalize(),
                                       alumno_data.apellido_materno.capitalize())
@@ -86,8 +131,21 @@ def pago():
     db.pago.alumno.writable = False
     db.pago.alumno.readable = False
 
-    form = SQLFORM(db.pago)
+    db.pago.monto.represent = lambda v,r: numfmt(v)
 
+    query = (db.pago.alumno == alumno) & (db.pago.deuda == deuda)
+
+    pagos = db(query
+       ).select(db.pago.monto,
+                db.pago.fecha,
+                db.pago.created_on,
+                orderby = ~db.pago.fecha
+       )
+
+
+    form = SQLFORM.grid(query, user_signature=False)
+
+    '''
     form.vars.deuda = deuda
     form.vars.alumno = alumno
 
@@ -108,7 +166,7 @@ def pago():
                     orderby = ~db.pago.fecha
            )
 
-
+    '''
     deuda_sum = db.deuda.total.coalesce_zero().sum()
     total_deuda = db(db.deuda.id == deuda).select(deuda_sum).first()[deuda_sum]
 
@@ -148,12 +206,29 @@ def nuevo():
     return {'form': form}
 
 
-
+@auth.requires_membership('Directiva')
 def admin():
 
-    form = SQLFORM.smartgrid(db[request.args(0) or 'deuda'], 
+    form = SQLFORM.smartgrid(db[request.args(0) or 'alumno'], 
                              #request.args[1:1],
-                             csv = True,
+                             csv = False,
+                             #linked_tables = 
+                            
                              user_signature=False)
 
-    return {'form':form}
+    
+    easy_titles = {'auth_user': 'Usuarios',
+                   'auth_group': 'Grupos de Acceso',
+                   'auth_membership': 'Membresías',
+                   'alumno': 'Alumnos',
+                   'apoderado': 'Apoderados',
+                   'deuda': 'Deudas',
+                   'pago': 'Pagos',
+                   'pago_archive': 'Histórico de Pagos',
+                   'documento_pago': 'Documentos de Pago'
+    }
+
+    et = Storage(easy_titles)
+        
+    return {'form':form, 'et':et}
+

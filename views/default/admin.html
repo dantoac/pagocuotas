@@ -7,9 +7,12 @@
 
       {{for t in db._tables():}}
 
-       
-      <li class="{{='active' if request.args(0) == t else ''}}"><a href="{{=URL(args=t)}}">{{=t}}</a></li>
-      
+      {{ if not t in ['auth_event', 'auth_permission', 'auth_cas']:}}
+
+      <li class="{{='active' if request.args(0) == t else ''}}">
+	<a href="{{=URL(args=t)}}">{{=et[t] if et.has_key(t) else t}}</a>
+      </li>
+      {{pass}}
       
       {{pass}}
     </ul>

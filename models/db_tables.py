@@ -1,5 +1,7 @@
 # coding: utf8
 
+db._common_fields.append(auth.signature)
+
 db.define_table('alumno',
                 Field('nombre', 'string'), #, length=10),
                 Field('apellido_paterno'), #, length=10),
@@ -9,38 +11,46 @@ db.define_table('alumno',
 
 
 db.define_table('apoderado',
+                Field('usuario', 'reference auth_user'),
                 Field('alumno', 'reference alumno'),
-                Field('apoderados', 'reference auth_user'),
             )
 
 
 db.define_table('deuda',
                 Field('nombre'),
-                Field('monto','integer'),
+                Field('monto','integer',
+                      represent = lambda v,r: numfmt(v)),
                 Field('cuotas', 'integer', label='Número de cuotas'),
                 Field('comienza','date', default=request.now.date()),
                 Field('finaliza','date', default=request.now.date()),
                 Field('infoextra', 'text',
                       label = 'Información Extra'),
-                Field('total', 'integer', compute = lambda r: r.monto * r.cuotas),
-                auth.signature,
-                format = '%(nombre)s ($%(total)s)'
+                Field('total', 'integer', 
+                      compute = lambda r: r.monto * r.cuotas,
+                      represent = lambda v,r: numfmt(v),
+                  ),
+                format = lambda r: '%(nombre)s (%(total)s)' % dict(
+                    nombre = r.nombre,
+                    total = numfmt(r.total)
+                )
                 )
 
 
 db.define_table('pago',
                 Field('alumno', 'reference alumno'),
                 Field('deuda', 'reference deuda'),
-                Field('monto', 'integer', label='Monto a pagar'),
+                Field('monto', 'integer', label='Monto a pagar',
+                      represent = lambda v,r: numfmt(v)),
                 Field('fecha', 'date', default = request.now.date(),
                       label = 'Fecha de Pago'),
                 #Field('mes', compute = lambda r: r.fecha.month),
                 Field('infoextra', 'text', 
                       label = 'Información Extra'),
-                auth.signature,
                 format = '%(fecha)s: %(monto)s'
                 )
 
+
+db.pago._enable_record_versioning()
 
 db.define_table('documento_pago',
                 Field('pago', 'reference pago'),

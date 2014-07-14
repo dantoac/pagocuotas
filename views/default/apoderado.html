@@ -1,0 +1,62 @@
+{{extend 'layout.html'}}
+
+<ul class="thumbnails">
+
+{{for data in alumnos:}}
+
+  <li class="span4">
+    <div class="thumbnail">
+      <img src="" alt="">
+      <h4>
+	{{=data.alumno.nombre}} 
+	<small>
+	  {{=data.alumno.apellido_paterno}} {{=data.alumno.apellido_materno}}
+	</small>
+      </h4>
+
+      <div class="progress progress-striped active">
+	<div class="bar" style="width: {{=porcentaje(total_deuda, data[total_pagado_alumno])}}%;">
+	  {{=porcentaje(total_deuda, data[total_pagado_alumno])}}%
+	</div>
+      </div>
+
+
+      <ul>
+
+	<li>Pagado: {{=numfmt(data[total_pagado_alumno])}}</li>
+
+	<li>Debe: {{=numfmt(total_deuda - data[total_pagado_alumno])}}</li>
+      </ul>
+      <a class="btn btn-large btn-block btn-info deuda-abonar"
+	 style = "display:none;"
+	 href="{{=URL(f='deuda', vars = {'alumno': data.alumno.id,
+	       'deuda': data.deuda.id})}}">
+	Detalle</a>
+    </div>
+  </li>
+
+{{pass}}
+
+</ul>
+
+
+
+<script>
+
+  $(document).ready(function(){
+  
+   $(".thumbnail").hover(
+     function() {
+       $(this).find(".deuda-abonar").show();
+     },
+     function() {
+       $(this).find(".deuda-abonar").hide();
+     }
+   )
+   
+
+  });
+  
+  
+
+</script>
